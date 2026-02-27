@@ -32,32 +32,20 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow-x: hidden; /* ★横揺れを完全に防ぐ */
+      overflow-x: hidden;
       width: 100vw;
       position: relative;
     }
 
     .app-container {
-      width: 100%; 
-      max-width: 420px; 
-      height: 98vh; 
-      background: var(--app-bg);
-      display: flex; 
-      flex-direction: column; 
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15); 
-      overflow-x: hidden; /* ★コンテナ内の横ブレも防ぐ */
-      border: 1px solid rgba(212, 175, 55, 0.2); 
-      position: relative;
+      width: 100%; max-width: 420px; height: 98vh; background: var(--app-bg);
+      display: flex; flex-direction: column; border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow-x: hidden;
+      border: 1px solid rgba(212, 175, 55, 0.2); position: relative;
     }
 
-    /* ★スマホで見た時の特別設定（画面を最大限広く使う） */
     @media (max-width: 480px) {
-      .app-container {
-        height: 100dvh; /* スマホのブラウザ枠にピッタリ合わせる */
-        border-radius: 0; /* 角丸をなくして画面いっぱいにする */
-        border: none;
-      }
+      .app-container { height: 100dvh; border-radius: 0; border: none; }
     }
     
     .congrats-overlay {
@@ -76,8 +64,7 @@
     
     header {
       background: var(--primary-gradient); color: #FFF; padding: 15px; 
-      text-align: center; position: relative; z-index: 10;
-      transition: var(--transition-base); /* アニメーションで滑らかに縮む */
+      text-align: center; position: relative; z-index: 10; transition: var(--transition-base);
     }
     header::after {
       content: ''; position: absolute; bottom: 0; left: 10%;
@@ -123,14 +110,13 @@
     .calc-result.visible { display: block; animation: fadeIn 0.5s ease-out; }
     .number-highlight { font-size: 1.3rem; color: var(--gold-accent); font-weight: bold; position: relative; transition: var(--transition-base); }
     
-    /* ★魔法のコンパクトモード（ボタンを押すとヘッダーがギュッと縮む） */
     header.compact { padding: 10px; }
-    header.compact h1 { display: none; /* タイトルを隠す */ }
+    header.compact h1 { display: none; }
     header.compact .calculator-container { 
       flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 0; 
     }
     header.compact .name-input-wrapper { margin-top: 0; width: auto; flex: 1; max-width: 140px; }
-    header.compact .name-input-wrapper::after { display: none; /* ラベルを隠す */ }
+    header.compact .name-input-wrapper::after { display: none; }
     header.compact .name-input { padding: 6px 10px; font-size: 0.9rem; }
     header.compact .calc-btn { padding: 6px 12px; font-size: 0.8rem; }
     header.compact .calc-result { width: 100%; margin-top: 0; padding: 4px; font-size: 0.8rem; }
@@ -149,7 +135,6 @@
     .message {
       max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 0.95rem;
       line-height: 1.6; position: relative; z-index: 2;
-      /* ★はみ出し防止 */
       word-wrap: break-word; overflow-wrap: anywhere; word-break: normal;
     }
     .user-message {
@@ -165,6 +150,22 @@
       top: -12px; left: -12px; font-size: 1.2rem; color: var(--gold-accent); background: #FFF;
       border-radius: 50%; padding: 2px;
     }
+    
+    /* ★新設：お守り画像用のCSS */
+    .amulet-image {
+      width: 100%; max-width: 300px; height: auto; border-radius: 12px; margin-top: 15px; 
+      border: 3px solid #FFF; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      transition: var(--transition-base); cursor: pointer; display: block;
+    }
+    .amulet-image:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3); }
+
+    .special-arrival { position: relative; }
+    .special-arrival::after {
+      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 10px; height: 10px; background: transparent; border: 2px solid var(--gold-accent);
+      border-radius: 50%; animation: specialRingPulse 1.5s ease-out forwards; z-index: 1; pointer-events: none;
+    }
+    @keyframes specialRingPulse { 0% { width: 10px; height: 10px; opacity: 1; border-width: 5px; } 50% { width: 150%; height: 150%; opacity: 0.5; border-width: 2px; } 100% { width: 200%; height: 200%; opacity: 0; border-width: 0px; } }
     
     .system-message {
       align-self: center; background: #FFF3CD; color: #856404; padding: 8px 16px; border-radius: 15px;
@@ -269,15 +270,10 @@
       } else {
         calcResult.classList.add('visible');
       }
-      
-      // ★鑑定成功時にヘッダーを縮ませる魔法を実行
       mainHeader.classList.add('compact');
     });
     
-    // 名前の入力をし直そうとしたら、ヘッダーを元の大きさに戻す
-    nameInput.addEventListener('focus', () => {
-      mainHeader.classList.remove('compact');
-    });
+    nameInput.addEventListener('focus', () => { mainHeader.classList.remove('compact'); });
 
     function showCongratsAnimation() {
       congratsOverlay.classList.add('visible');
@@ -301,12 +297,13 @@
         const result = await response.json();
         indicator.remove();
 
-        if (result.error) {
-          appendMessage("エラー: " + result.error, 'system');
-          return;
-        }
+        if (result.error) { appendMessage("エラー: " + result.error, 'system'); return; }
         
-        appendMessage(result.text, 'app');
+        // ★修正：Base64文字列から完全なデータURLを再構築する
+        const imageDataUrl = 'data:image/png;base64,' + result.imageBase64;
+
+        // ★修正：テキストと構築したデータURLを一緒に表示する
+        appendMessage(result.text, 'app', imageDataUrl);
 
       } catch (e) {
         indicator.remove();
@@ -314,12 +311,20 @@
       }
     }
 
-    function appendMessage(text, sender) {
+    // ★修正：第3引数でデータURLを受け取る
+    function appendMessage(text, sender, imageDataUrl = null) {
       const div = document.createElement('div');
-      div.className = `message ${sender}-message`;
-      div.innerHTML = text.replace(/\n/g, '<br>');
-      chatContainer.appendChild(div);
+      div.className = `message ${sender}-message ${sender === 'app' ? 'special-arrival' : ''}`;
       
+      let contentHtml = text.replace(/\n/g, '<br>');
+      
+      // ★AIからの返答で、かつデータURLがある場合は、画像も追加する
+      if (sender === 'app' && imageDataUrl) {
+        contentHtml += `<img src="${imageDataUrl}" class="amulet-image" alt="あなただけの魂のお守り" onclick="window.open('${imageDataUrl}', '_blank')">`;
+      }
+      
+      div.innerHTML = contentHtml;
+      chatContainer.appendChild(div);
       div.style.animation = 'fadeIn 0.5s ease-out';
 
       if (sender === 'app') {
