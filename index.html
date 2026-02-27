@@ -150,14 +150,6 @@
       top: -12px; left: -12px; font-size: 1.2rem; color: var(--gold-accent); background: #FFF;
       border-radius: 50%; padding: 2px;
     }
-    
-    /* ★新設：お守り画像用のCSS */
-    .amulet-image {
-      width: 100%; max-width: 300px; height: auto; border-radius: 12px; margin-top: 15px; 
-      border: 3px solid #FFF; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-      transition: var(--transition-base); cursor: pointer; display: block;
-    }
-    .amulet-image:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3); }
 
     .special-arrival { position: relative; }
     .special-arrival::after {
@@ -299,11 +291,7 @@
 
         if (result.error) { appendMessage("エラー: " + result.error, 'system'); return; }
         
-        // ★修正：Base64文字列から完全なデータURLを再構築する
-        const imageDataUrl = 'data:image/png;base64,' + result.imageBase64;
-
-        // ★修正：テキストと構築したデータURLを一緒に表示する
-        appendMessage(result.text, 'app', imageDataUrl);
+        appendMessage(result.text, 'app');
 
       } catch (e) {
         indicator.remove();
@@ -311,20 +299,12 @@
       }
     }
 
-    // ★修正：第3引数でデータURLを受け取る
-    function appendMessage(text, sender, imageDataUrl = null) {
+    function appendMessage(text, sender) {
       const div = document.createElement('div');
       div.className = `message ${sender}-message ${sender === 'app' ? 'special-arrival' : ''}`;
-      
-      let contentHtml = text.replace(/\n/g, '<br>');
-      
-      // ★AIからの返答で、かつデータURLがある場合は、画像も追加する
-      if (sender === 'app' && imageDataUrl) {
-        contentHtml += `<img src="${imageDataUrl}" class="amulet-image" alt="あなただけの魂のお守り" onclick="window.open('${imageDataUrl}', '_blank')">`;
-      }
-      
-      div.innerHTML = contentHtml;
+      div.innerHTML = text.replace(/\n/g, '<br>');
       chatContainer.appendChild(div);
+      
       div.style.animation = 'fadeIn 0.5s ease-out';
 
       if (sender === 'app') {
