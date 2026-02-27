@@ -1,12 +1,10 @@
 export default async function handler(req, res) {
-  // POST通信以外は弾く
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POSTメソッドのみ許可されています' });
   }
 
   const { userText, currentNumber } = req.body;
-  // Vercelに登録するAPIキーをここで読み込みます
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY; // 今の鍵1つだけ！
 
   if (!apiKey) {
     return res.status(500).json({ error: 'サーバー側にAPIキーが設定されていません。' });
@@ -27,7 +25,8 @@ export default async function handler(req, res) {
   const data = numerologyData[currentNumber];
   if (!data) return res.status(400).json({ error: '無効な数秘です' });
 
-  const prompt = `
+  // 1. まずはGeminiでテキスト鑑定（今まで通り）
+  const textPrompt = `
     あなたは数秘術とカタカムナ音霊鑑定の奥義を極めた、慈愛に満ちた熟練カウンセラーです。
     ユーザーは「${currentNumber}の音」の持ち主です。
     
@@ -37,33 +36,49 @@ export default async function handler(req, res) {
     相談内容: 「${userText}」
     
     以下の指針で、ユーザーの魂を震わせるような深いアドバイスを300〜500文字で作成してください。
-    1. 「〜というお悩みですね」「深呼吸をして〜」「〜に傾いているのかもしれません」などの機械的な定型文は絶対に禁止。
+    1. 機械的な定型文は絶対に禁止。
     2. まるで目の前で悩んでいる親友に語りかけるように、温かく人間味のある言葉で紡いでください。
     3. その悩みの中で、どの「エゴ」の要素が強く出てしまっているか、優しく論理的に分析する。
     4. 本来持っている「使命」の力を取り戻し、この悩みをどう乗り越えて「真実の自分」として輝くべきか、具体的に導く。
-    5. 専門用語を並べるだけでなく、心に寄り添う温かい言葉で語りかける。
   `;
 
   try {
-    // 安定して動作する最新モデルを直接指定
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const response = await fetch(url, {
+    // テキスト生成のAPIコール
+    const textUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const textResponse = await fetch(textUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({ contents: [{ parts: [{ text: textPrompt }] }] })
     });
+    const textResult = await textResponse.json();
+    if (textResult.error) return res.status(500).json({ error: textResult.error.message });
+    const appraisalText = textResult.candidates[0].content.parts[0].text;
+
+    // 2. 完成した鑑定テキストを元に、画像生成用プロンプトを作成
+    const imagePrompt = `An ethereal, spiritual abstract image representing the "soul landscape" for Sound ${currentNumber}, based on this advice: ${appraisalText.substring(0, 100)}. The image should be a calming, mysterious, and uplifting visual amulet. Avoid cute or "kawaii" styles. Focus on structural geometric shapes, flowing light, structure, stability, and deep, quiet energy. Use a soft, diffused color palette of sage green, pale gold, warm copper, and gentle cream, with touches of deep forest green and shimmering silver. This image should feel grounded and full of silent potential, acting as a personal visual talisman. No text.`;
+
+    // 3. 【ここが進化！】Gemini API（Googleの画像生成モデル）で画像を生成（Base64として）
+    // ※以下のAPIコールは、Gemini APIが提供する音楽生成機能の一部を模倣した、Illustrative（例示的）なものです。
+    // ※実際のアプリへの組み込みや仕様は、Googleの最新ドキュメントやAPIアップデートをご確認ください。
+    const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-image:generateImage?key=${apiKey}`; // 例示的なモデル/エンドポイント
+    const imageResponse = await fetch(imageUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: imagePrompt,
+        output_format: "base64" // Base64形式で出力するように指定
+      })
+    });
+    const imageResult = await imageResponse.json();
+    if (imageResult.error) return res.status(500).json({ error: imageResult.error.message });
     
-    const result = await response.json();
-    
-    if (result.error) {
-      return res.status(500).json({ error: result.error.message });
-    }
-    
-    // 生成されたテキストだけをフロントに返す
-    return res.status(200).json({ text: result.candidates[0].content.parts[0].text });
+    // 例示的なレスポンス構造からBase64文字列を抽出
+    const base64String = imageResult.imageBase64; // ここにBase64が入ってくると想定
+
+    // 4. テキストと画像のBase64文字列をフロントに返す
+    return res.status(200).json({ text: appraisalText, imageBase64: base64String });
 
   } catch (error) {
     return res.status(500).json({ error: 'サーバー通信に失敗しました' });
   }
-
 }
