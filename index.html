@@ -2,12 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>使命鑑定ナビ</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Klee+One&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    /* （CSSは前回と全く同じプレミアムデザインです） */
     :root {
       --primary-gradient: linear-gradient(135deg, #1A253A 0%, #3C5A99 100%); 
       --accent-gradient: linear-gradient(135deg, #D4AF37 0%, #b58900 100%); 
@@ -19,9 +18,11 @@
       --text-main: #333333;
       --text-user: #FFFFFF;
       --border-soft: #DDE2E5;
-      --transition-base: all 0.3s ease;
+      --transition-base: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
+    
     * { box-sizing: border-box; }
+    
     body {
       font-family: '游明朝', 'YuMincho', serif;
       background: var(--soft-beige);
@@ -31,9 +32,34 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden; /* ★横揺れを完全に防ぐ */
+      width: 100vw;
       position: relative;
     }
+
+    .app-container {
+      width: 100%; 
+      max-width: 420px; 
+      height: 98vh; 
+      background: var(--app-bg);
+      display: flex; 
+      flex-direction: column; 
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15); 
+      overflow-x: hidden; /* ★コンテナ内の横ブレも防ぐ */
+      border: 1px solid rgba(212, 175, 55, 0.2); 
+      position: relative;
+    }
+
+    /* ★スマホで見た時の特別設定（画面を最大限広く使う） */
+    @media (max-width: 480px) {
+      .app-container {
+        height: 100dvh; /* スマホのブラウザ枠にピッタリ合わせる */
+        border-radius: 0; /* 角丸をなくして画面いっぱいにする */
+        border: none;
+      }
+    }
+    
     .congrats-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(26, 37, 58, 0.85); display: none;
@@ -47,15 +73,11 @@
     }
     .congrats-text { font-size: 2rem; font-weight: bold; margin-bottom: 20px; }
     .congrats-sparkles { font-size: 4rem; animation: sparkleRotate 2s linear infinite; }
-    .app-container {
-      width: 100%; max-width: 420px; height: 98vh; background: var(--app-bg);
-      display: flex; flex-direction: column; border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden;
-      border: 1px solid rgba(212, 175, 55, 0.2); position: relative;
-    }
+    
     header {
       background: var(--primary-gradient); color: #FFF; padding: 15px; 
       text-align: center; position: relative; z-index: 10;
+      transition: var(--transition-base); /* アニメーションで滑らかに縮む */
     }
     header::after {
       content: ''; position: absolute; bottom: 0; left: 10%;
@@ -64,12 +86,15 @@
     header h1 {
       margin: 0 0 10px 0; font-size: 1.4rem; font-family: 'Playfair Display', serif; 
       letter-spacing: 0.05em; display: flex; justify-content: center; align-items: center;
+      transition: var(--transition-base);
     }
     .header-icon { font-size: 1.5rem; color: var(--gold-accent); margin-right: 8px; }
+    
     .calculator-container {
       display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 5px; 
+      transition: var(--transition-base);
     }
-    .name-input-wrapper { position: relative; width: 85%; margin-top: 25px; }
+    .name-input-wrapper { position: relative; width: 85%; margin-top: 25px; transition: var(--transition-base); }
     .name-input {
       width: 100%; padding: 10px 18px; border: 2px solid var(--border-soft);
       border-radius: 30px; text-align: center; outline: none; font-size: 1.1rem;
@@ -80,7 +105,7 @@
       content: '＼ お名前（ひらがな）をどうぞ ／'; position: absolute; top: -28px; 
       left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: var(--gold-accent);
       font-family: 'Klee One', cursive; white-space: nowrap; background: rgba(26, 37, 58, 0.8); 
-      padding: 2px 10px; border-radius: 10px;
+      padding: 2px 10px; border-radius: 10px; transition: var(--transition-base);
     }
     .calc-btn {
       background: var(--navy-accent); color: var(--gold-accent); border: 1px solid var(--gold-accent);
@@ -98,6 +123,18 @@
     .calc-result.visible { display: block; animation: fadeIn 0.5s ease-out; }
     .number-highlight { font-size: 1.3rem; color: var(--gold-accent); font-weight: bold; position: relative; transition: var(--transition-base); }
     
+    /* ★魔法のコンパクトモード（ボタンを押すとヘッダーがギュッと縮む） */
+    header.compact { padding: 10px; }
+    header.compact h1 { display: none; /* タイトルを隠す */ }
+    header.compact .calculator-container { 
+      flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 0; 
+    }
+    header.compact .name-input-wrapper { margin-top: 0; width: auto; flex: 1; max-width: 140px; }
+    header.compact .name-input-wrapper::after { display: none; /* ラベルを隠す */ }
+    header.compact .name-input { padding: 6px 10px; font-size: 0.9rem; }
+    header.compact .calc-btn { padding: 6px 12px; font-size: 0.8rem; }
+    header.compact .calc-result { width: 100%; margin-top: 0; padding: 4px; font-size: 0.8rem; }
+
     @keyframes sparkleRotate { 0% { transform: scale(1) rotate(0deg); opacity: 1; } 50% { transform: scale(1.1) rotate(180deg); opacity: 0.8; } 100% { transform: scale(1) rotate(360deg); opacity: 1; } }
     @keyframes congratsPop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
     
@@ -111,7 +148,9 @@
     
     .message {
       max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 0.95rem;
-      line-height: 1.6; word-wrap: break-word; position: relative; z-index: 2;
+      line-height: 1.6; position: relative; z-index: 2;
+      /* ★はみ出し防止 */
+      word-wrap: break-word; overflow-wrap: anywhere; word-break: normal;
     }
     .user-message {
       align-self: flex-end; background: var(--primary-gradient); color: var(--text-user);
@@ -126,13 +165,6 @@
       top: -12px; left: -12px; font-size: 1.2rem; color: var(--gold-accent); background: #FFF;
       border-radius: 50%; padding: 2px;
     }
-    .special-arrival { position: relative; }
-    .special-arrival::after {
-      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 10px; height: 10px; background: transparent; border: 2px solid var(--gold-accent);
-      border-radius: 50%; animation: specialRingPulse 1.5s ease-out forwards; z-index: 1; pointer-events: none;
-    }
-    @keyframes specialRingPulse { 0% { width: 10px; height: 10px; opacity: 1; border-width: 5px; } 50% { width: 150%; height: 150%; opacity: 0.5; border-width: 2px; } 100% { width: 200%; height: 200%; opacity: 0; border-width: 0px; } }
     
     .system-message {
       align-self: center; background: #FFF3CD; color: #856404; padding: 8px 16px; border-radius: 15px;
@@ -149,12 +181,12 @@
     .input-area { display: flex; padding: 12px; border-top: 1px solid #EEF2F5; gap: 8px; background: #FFF; z-index: 10; }
     #chat-input {
       flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #E5E8E8; outline: none;
-      font-size: 0.95rem; transition: var(--transition-base);
+      font-size: 0.95rem; transition: var(--transition-base); width: 100%;
     }
     #chat-input:focus { border-color: var(--dusty-pink); box-shadow: 0 0 10px rgba(225, 190, 231, 0.5); }
     #send-btn {
       background: linear-gradient(135deg, #D4AF37 0%, #b58900 100%); color: #FFF; border: none;
-      border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center;
+      border-radius: 50%; width: 44px; height: 44px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center;
       justify-content: center; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); transition: var(--transition-base); position: relative;
     }
     #send-btn:active { transform: translateY(2px); }
@@ -174,7 +206,7 @@
   </div>
 
   <div class="app-container">
-    <header>
+    <header id="main-header">
       <h1><i class="fas fa-gem header-icon"></i>使命鑑定ナビ</h1>
       <div class="calculator-container">
         <div class="name-input-wrapper">
@@ -194,13 +226,13 @@
   </div>
 
   <script>
-    // ★APIキーや命令文は、すべて安全な裏側のサーバー（api/gemini.js）に移動しました！
     const charValues = {
       'あ':18,'い':5,'う':19,'え':43,'お':40,'か':25,'き':29,'く':11,'け':35,'こ':16,'さ':28,'し':23,'す':21,'せ':36,'そ':30,'た':26,'ち':27,'つ':44,'て':9,'と':17,'な':14,'に':32,'ぬ':39,'ね':46,'の':20,'は':42,'ひ':1,'ふ':2,'へ':22,'ほ':47,'ま':6,'み':3,'む':13,'め':10,'も':33,'や':15,'ゆ':37,'よ':4,'ら':31,'り':8,'る':12,'れ':24,'ろ':34,'わ':7,'ん':48,
       'が':-25,'ぎ':-29,'ぐ':-11,'げ':-35,'ご':-16,'ざ':-28,'じ':-23,'ず':-21,'ぜ':-36,'ぞ':-30,'だ':-26,'ぢ':-27,'づ':-44,'で':-9,'ど':-17,'ば':-42,'び':-1,'ぶ':-2,'べ':-22,'ぼ':-47,'ぱ':-42,'ぴ':-1,'ぷ':-2,'ぺ':-22,'ぽ':-47
     };
 
     const congratsOverlay = document.getElementById('congrats-overlay');
+    const mainHeader = document.getElementById('main-header');
     const nameInput = document.getElementById('name-input');
     const calcBtn = document.getElementById('calc-btn');
     const calcResult = document.getElementById('calc-result');
@@ -210,7 +242,6 @@
     
     let currentNumber = null;
 
-    // ★別のタブやアプリからこの画面に戻ってきた際、スクロールを自動で一番下にする
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -238,8 +269,16 @@
       } else {
         calcResult.classList.add('visible');
       }
+      
+      // ★鑑定成功時にヘッダーを縮ませる魔法を実行
+      mainHeader.classList.add('compact');
     });
     
+    // 名前の入力をし直そうとしたら、ヘッダーを元の大きさに戻す
+    nameInput.addEventListener('focus', () => {
+      mainHeader.classList.remove('compact');
+    });
+
     function showCongratsAnimation() {
       congratsOverlay.classList.add('visible');
       setTimeout(() => { congratsOverlay.classList.remove('visible'); }, 1500);
@@ -253,7 +292,6 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       try {
-        // ★ここでVercelの裏部屋（/api/gemini）にデータを送信します！
         const response = await fetch('/api/gemini', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -268,7 +306,6 @@
           return;
         }
         
-        // 裏部屋から返ってきたテキストを表示
         appendMessage(result.text, 'app');
 
       } catch (e) {
@@ -279,7 +316,7 @@
 
     function appendMessage(text, sender) {
       const div = document.createElement('div');
-      div.className = `message ${sender}-message ${sender === 'app' ? 'special-arrival' : ''}`;
+      div.className = `message ${sender}-message`;
       div.innerHTML = text.replace(/\n/g, '<br>');
       chatContainer.appendChild(div);
       
