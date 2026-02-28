@@ -9,8 +9,8 @@ export default async function handler(req, res) {
     if (!events || events.length === 0) return res.status(200).send('OK');
     const userText = events[0].message.text;
 
-    // 🌟 あなたのリストで確認できた「最新モデル」を直接指定します
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+    // 🌟 あなたのリストで確認できた「最新モデル」と「正しい住所(v1beta)」の組み合わせ
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
     
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
@@ -22,7 +22,6 @@ export default async function handler(req, res) {
 
     const geminiData = await geminiRes.json();
 
-    // エラーがあればログに出す
     if (geminiData.error) {
       console.error("Gemini Error:", geminiData.error.message);
       return res.status(200).send('OK');
