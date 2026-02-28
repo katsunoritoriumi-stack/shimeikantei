@@ -5,17 +5,14 @@ export default async function handler(req, res) {
     const apiKey = (process.env.GEMINI_API_KEY || "").trim();
     const lineToken = (process.env.LINE_CHANNEL_ACCESS_TOKEN || "").trim();
 
-    // 🕵️ ログ出力（どこまで進んだか確認用）
     console.log("--- 診断開始 ---");
-    console.log("APIキー確認:", apiKey ? "OK" : "NG");
-
     const events = req.body.events;
     if (!events || events.length === 0) return res.status(200).send('OK');
     const userText = events[0].message.text;
 
-    // 🌟 【最重要修正】URLを「v1」から「v1beta」に変更
-    // これにより 523 の「Not Found」エラーを回避します
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 🌟 最重要：住所を「v1」という最も安定した形式に固定します
+    // これにより 524 で出ていた「v1betaでは見つからない」エラーを回避します
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
