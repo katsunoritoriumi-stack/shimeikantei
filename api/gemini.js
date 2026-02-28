@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     const apiKey = (process.env.GEMINI_API_KEY || "").trim();
     const lineToken = (process.env.LINE_CHANNEL_ACCESS_TOKEN || "").trim();
 
-    // 修正ポイント：URLを「v1beta」に変更し、モデル名をより確実なものにしました
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 修正ポイント：モデル名を「gemini-1.5-flash-latest」に変更して認識率を上げます
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
     
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
@@ -25,8 +25,9 @@ export default async function handler(req, res) {
 
     const geminiData = await geminiRes.json();
 
+    // エラーがある場合はログに出して終了
     if (geminiData.error) {
-      console.error("Gemini API Error Detail:", geminiData.error.message);
+      console.error("Gemini Error:", geminiData.error.message);
       return res.status(200).send('OK');
     }
 
@@ -47,7 +48,7 @@ export default async function handler(req, res) {
 
     return res.status(200).send('OK');
   } catch (e) {
-    console.error("System Error:", e.message);
+    console.error("Critical System Error:", e.message);
     return res.status(200).send('OK');
   }
 }
