@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     const apiKey = (process.env.GEMINI_API_KEY || "").trim();
     const lineToken = (process.env.LINE_CHANNEL_ACCESS_TOKEN || "").trim();
 
-    // 🌟最大の修正ポイント：すべてのAPIキーで確実に動く「gemini-pro」を指定
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // 最新の賢いモデル（1.5-flash）と安定した v1 の組み合わせに戻します
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
@@ -25,7 +25,6 @@ export default async function handler(req, res) {
 
     const geminiData = await geminiRes.json();
 
-    // エラーがある場合はログに出して終了
     if (geminiData.error) {
       console.error("Gemini Error:", geminiData.error.message);
       return res.status(200).send('OK');
