@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     const apiKey = (process.env.GEMINI_API_KEY || "").trim();
     const lineToken = (process.env.LINE_CHANNEL_ACCESS_TOKEN || "").trim();
 
-    // 修正ポイント：v1 エンドポイントと標準モデル名を使用
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 修正ポイント：URLを「v1beta」に変更し、モデル名をより確実なものにしました
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
