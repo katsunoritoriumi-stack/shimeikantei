@@ -9,9 +9,14 @@ export default async function handler(req, res) {
     const userText = event.message.text;
     const replyToken = event.replyToken;
 
-    // 修正ポイント：URLを v1 に変更しました
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    // APIキーの前後にあるかもしれない不要なスペースを自動で削除
+    const apiKey = (process.env.GEMINI_API_KEY || "").trim();
+    const lineToken = (process.env.LINE_CHANNEL_ACCESS_TOKEN || "").trim();
+
+    // 修正：最も確実な v1beta 形式のURLを使用
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
+    console.log("Calling Gemini API...");
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -22,20 +27,21 @@ export default async function handler(req, res) {
 
     const geminiData = await geminiRes.json();
 
-    // エラーチェック用のログ
+    // Gemini側でエラーが起きた場合のログ
     if (geminiData.error) {
-      console.error("Gemini API Error:", geminiData.error.message);
+      console.error("Gemini API Error Detail:", geminiData.error.message);
       return res.status(200).send('OK');
     }
 
     const aiText = geminiData.candidates[0].content.parts[0].text;
 
     // LINEに返信する
+    console.log("Sending reply to LINE...");
     await fetch('https://api.line.me/v2/bot/message/reply', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`
+        'Authorization': `Bearer ${lineToken}`
       },
       body: JSON.stringify({
         replyToken: replyToken,
